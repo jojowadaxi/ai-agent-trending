@@ -1,5 +1,7 @@
 name: Weekly AI Agent Trending
 
+# Push 新工作流触发 Actions 检测
+
 on:
   schedule:
     # 每周一早上 9:00 (北京时间 UTC+8 → UTC 01:00)
