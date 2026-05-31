@@ -1,0 +1,479 @@
+Tavily MCP Server - Tavily Docs
+https://docs.tavily.com/documentation/mcp
+
+<!DOCTYPE html>Tavily MCP Server - Tavily Docs
+
+Skip to main content
+
+Tavily Docs home page
+
+Search...
+
+⌘KAsk Assistant
+
+Search...
+
+Navigation
+
+Tavily MCP Server
+
+Tavily MCP Server
+
+Home
+
+Introduction
+
+API & SDKs
+
+Ecosystem
+
+Examples
+
+Changelog
+
+Help
+
+Tavily MCP Server
+
+Tavily MCP Server
+
+Copy page
+
+Tavily MCP Server allows you to use the Tavily API in your MCP clients.
+
+Copy page
+
+Documentation Index
+
+Fetch the complete documentation index at: https://docs.tavily.com/llms.txt
+
+Use this file to discover all available pages before exploring further.
+
+GitHub
+
+/tavily-ai/tavily-mcp
+
+NPM
+
+@tavily/mcp
+
+Compatible with both Cursor and Claude Desktop!Tavily MCP is also compatible with any MCP client.
+
+Check out our
+tutorial
+on combining Tavily MCP with Neo4j MCP server!
+
+Overview
+
+Features
+
+The Model Context Protocol (MCP) is an open standard that enables AI systems to interact seamlessly with various data sources and tools, facilitating secure, two-way connections.Developed by Anthropic, the Model Context Protocol (MCP) enables AI assistants like Claude to seamlessly integrate with Tavily’s advanced search and data extraction capabilities. This integration provides AI models with real-time access to web information, complete with sophisticated filtering options and domain-specific search features.
+
+The Tavily MCP server provides:
+
+Seamless interaction with the tavily-search and tavily-extract tools
+
+Real-time web search capabilities through the tavily-search tool
+
+Intelligent data extraction from web pages via the tavily-extract tool
+
+​
+
+Remote MCP Server
+
+The easiest way to take advantage of Tavily MCP is by using the remote URL. This provides a seamless experience without requiring local installation or configuration.
+Simply use the remote MCP server URL with your Tavily API key:
+
+<code language="text" numberOfLines="2"><span class="line"><span>https://mcp.tavily.com/mcp/?tavilyApiKey=<your-api-key> </span></span>
+<span class="line"><span></span></span></code>
+
+Get your Tavily API key from tavily.com.
+
+​
+
+Connect to Cursor
+
+Click the ⬆️ Add to Cursor ⬆️ button, this will do most of the work for you but you will still need to edit the configuration to add your API-KEY. You can get a Tavily API key here.
+once you click the button you should be redirect to Cursor …
+You will then be redirected to your mcp.json file where you have to add your-api-key.
+
+<code language="json" numberOfLines="8"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "mcpServers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-remote-mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "command"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"npx -y mcp-remote https://mcp.tavily.com/mcp/?tavilyApiKey=<your-api-key>"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "env"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {}</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+​
+
+Connect to Claude Desktop
+
+Claude desktop now supports adding integrations which is currently in beta. An integration in this case is the Tavily Remote MCP, below I will explain how to add the MCP as an integration in Claude desktop.
+Open claude desktop, click the button with the two sliders and then navigate to add integrations. Name the integration and insert the Tavily remote MCP url with your API key. You can get a Tavily API key here. Click Add to confirm.
+
+​
+
+OpenAI
+
+Allow models to use remote MCP servers to perform tasks.
+
+You first need to export your OPENAI_API_KEY
+
+You must also add your Tavily API-key to <your-api-key>, you can get a Tavily API key here
+
+<code language="python" numberOfLines="26"><span class="line"><span style="color:#CF222E;--shiki-dark:#C586C0">from</span><span style="color:#1F2328;--shiki-dark:#D4D4D4"> openai </span><span style="color:#CF222E;--shiki-dark:#C586C0">import</span><span style="color:#1F2328;--shiki-dark:#D4D4D4"> OpenAI</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">client </span><span style="color:#CF222E;--shiki-dark:#D4D4D4">=</span><span style="color:#1F2328;--shiki-dark:#D4D4D4"> OpenAI()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">resp </span><span style="color:#CF222E;--shiki-dark:#D4D4D4">=</span><span style="color:#1F2328;--shiki-dark:#D4D4D4"> client.responses.create(</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#9CDCFE"> model</span><span style="color:#CF222E;--shiki-dark:#D4D4D4">=</span><span style="color:#0A3069;--shiki-dark:#CE9178">"gpt-4.1"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#9CDCFE"> tools</span><span style="color:#CF222E;--shiki-dark:#D4D4D4">=</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">[</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> {</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "type"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "server_label"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"tavily"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "server_url"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"https://mcp.tavily.com/mcp/?tavilyApiKey=<your-api-key>"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "require_approval"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"never"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"> ## Optional default parameters:</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "headers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "DEFAULT_PARAMETERS"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: json.dumps({</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "include_favicon"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0550AE;--shiki-dark:#569CD6">True</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "include_images"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0550AE;--shiki-dark:#569CD6">False</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "include_raw_content"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0550AE;--shiki-dark:#569CD6">False</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }),</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> },</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> ],</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#9CDCFE"> input</span><span style="color:#CF222E;--shiki-dark:#D4D4D4">=</span><span style="color:#0A3069;--shiki-dark:#CE9178">"Do you have access to the tavily mcp server?"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#0550AE;--shiki-dark:#DCDCAA">print</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">(resp.output_text)</span></span>
+</code>
+
+​
+
+Connect to Claude Code
+
+Claude Code natively supports remote MCP servers with OAuth authentication. Add Tavily to your Claude Code configuration by running:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">claude</span><span style="color:#0A3069;--shiki-dark:#CE9178"> mcp</span><span style="color:#0A3069;--shiki-dark:#CE9178"> add</span><span style="color:#0A3069;--shiki-dark:#CE9178"> tavily-remote-mcp</span><span style="color:#0550AE;--shiki-dark:#569CD6"> --transport</span><span style="color:#0A3069;--shiki-dark:#CE9178"> http</span><span style="color:#0A3069;--shiki-dark:#CE9178"> https://mcp.tavily.com/mcp/</span></span>
+</code>
+
+When you start a new conversation, Claude Code will open a browser window for you to complete the OAuth flow and authorize access to your Tavily account. No API key needed in the URL — authentication is handled automatically via OAuth.
+You can also manually add the following to your .claude/settings.json:
+
+<code language="json" numberOfLines="8"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "mcpServers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-remote-mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "type"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"http"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "url"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"https://mcp.tavily.com/mcp/"</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+Alternatively, you can also connect using mcp-remote:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">claude</span><span style="color:#0A3069;--shiki-dark:#CE9178"> mcp</span><span style="color:#0A3069;--shiki-dark:#CE9178"> add</span><span style="color:#0A3069;--shiki-dark:#CE9178"> tavily-remote-mcp</span><span style="color:#0550AE;--shiki-dark:#569CD6"> --</span><span style="color:#0A3069;--shiki-dark:#CE9178"> npx</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -y</span><span style="color:#0A3069;--shiki-dark:#CE9178"> mcp-remote</span><span style="color:#0A3069;--shiki-dark:#CE9178"> https://mcp.tavily.com/mcp</span></span>
+</code>
+
+​
+
+Clients that don’t support remote MCPs
+
+mcp-remote is a lightweight bridge that lets MCP clients that can only talk to local (stdio) servers securely connect to remote MCP servers over HTTP + SSE with OAuth-based auth, so you can host and update your server in the cloud while existing clients keep working. It serves as an experimental stop-gap until popular MCP clients natively support remote, authorized servers.
+
+<code language="json" numberOfLines="10"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-remote"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "command"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"npx"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "args"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: [</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "-y"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "mcp-remote"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#0A3069;--shiki-dark:#CE9178"> "https://mcp.tavily.com/mcp/?tavilyApiKey=<your-api-key>"</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> ]</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+​
+
+OAuth Authentication
+
+The Tavily Remote MCP server supports secure OAuth authentication, allowing you to connect and authorize seamlessly with compatible clients.
+
+Using MCP Inspector
+
+Open the MCP Inspector and click “Open Auth Settings”. Select the OAuth flow and complete these steps:
+
+Metadata discovery
+
+Client registration
+
+Preparing authorization
+
+Request authorization and obtain the authorization code
+
+Token request
+
+Authentication complete
+
+Once finished, you will receive an access token that lets you securely make authenticated requests to the Tavily Remote MCP server.
+
+Using Other MCP Clients
+
+You can configure your MCP client to use OAuth without including your Tavily API key in the URL. For example, in Cursor’s mcp.json:
+
+<code language="json" numberOfLines="8"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "mcpServers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-remote-mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "command"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"npx mcp-remote https://mcp.tavily.com/mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "env"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {}</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+If you need to clear stored OAuth credentials and reauthenticate, run:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">rm</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -rf</span><span style="color:#0A3069;--shiki-dark:#CE9178"> ~/.mcp-auth</span></span>
+</code>
+
+API Key Selection for OAuthWhen using OAuth authentication, you can control which API key is used by naming a key mcp_auth_default in your Tavily dashboard:
+
+Personal account: If you have a key named mcp_auth_default in your personal account, it will be used for all OAuth-authenticated requests.
+
+Team account: If your team has a key named mcp_auth_default, it will be used for all OAuth-authenticated requests.
+
+Both set: If both your personal account and your team have a key named mcp_auth_default, the personal key takes priority.
+
+Neither set: If no mcp_auth_default key exists, the default key in your personal account will be used. If no default key is set, the first available key will be used.
+
+OAuth authentication is optional—you can still use API key authentication at any time by including your Tavily API key in the URL query parameter (?tavilyApiKey=...) or by setting it in the Authorization header.
+
+Alternatively, you can also run the MCP server locally.
+
+​
+
+Default Parameters
+
+When using the remote MCP, you can specify default parameters for all requests by including a DEFAULT_PARAMETERS header containing a JSON object with your desired defaults. Example:
+
+<code language="text" numberOfLines="2"><span class="line"><span>{"include_images":true, "search_depth": "advanced", "max_results": 10}</span></span>
+<span class="line"><span></span></span></code>
+
+​
+
+Local Installation
+
+​
+
+Prerequisites
+
+Required Tools
+
+Tavily API key
+
+If you don’t have a Tavily API key, you can sign up for a free account here
+
+Claude Desktop or Cursor
+
+Node.js (v20 or higher)
+
+You can verify your Node.js installation by running:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">node</span><span style="color:#0550AE;--shiki-dark:#569CD6"> --version</span></span>
+</code>
+
+Git Installation (Optional)
+
+Only needed if using Git installation method:
+
+On macOS: brew install git
+
+On Linux:
+
+Debian/Ubuntu: sudo apt install git
+
+RedHat/CentOS: sudo yum install git
+
+On Windows: Download Git for Windows
+
+NPX
+
+Git
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">npx</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -y</span><span style="color:#0A3069;--shiki-dark:#CE9178"> tavily-mcp@0.1.3</span></span>
+</code>
+
+Although you can launch a server on its own, it’s not particularly helpful in
+isolation. Instead, you should integrate it into an MCP client.
+
+​
+
+Configuring MCP Clients
+
+Cursor
+
+Claude Desktop
+
+Note: Requires Cursor version 0.45.6 or higher
+To set up the Tavily MCP server in Cursor:
+
+Open Cursor Settings
+
+Navigate to Features > MCP Servers
+
+Click on the ”+ Add New MCP Server” button
+
+Fill out the following information:
+
+Name: Enter a nickname for the server (e.g., “tavily-mcp”)
+
+Type: Select “command” as the type
+
+Command: Enter the command to run the server:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">env</span><span style="color:#0A3069;--shiki-dark:#CE9178"> TAVILY_API_KEY=tvly-YOUR_API_KEY</span><span style="color:#0A3069;--shiki-dark:#CE9178"> npx</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -y</span><span style="color:#0A3069;--shiki-dark:#CE9178"> tavily-mcp@0.1.3</span></span>
+</code>
+
+Replace tvly-YOUR_API_KEY with your Tavily API key from app.tavily.com/home
+
+macOS
+
+Windows
+
+<code language="shellscript" numberOfLines="8"><span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Create the config file if it doesn't exist</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">touch</span><span style="color:#0A3069;--shiki-dark:#CE9178"> "</span><span style="color:#1F2328;--shiki-dark:#9CDCFE">$HOME</span><span style="color:#0A3069;--shiki-dark:#CE9178">/Library/Application Support/Claude/claude_desktop_config.json"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Opens the config file in TextEdit</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">open</span><span style="color:#0550AE;--shiki-dark:#569CD6"> -e</span><span style="color:#0A3069;--shiki-dark:#CE9178"> "</span><span style="color:#1F2328;--shiki-dark:#9CDCFE">$HOME</span><span style="color:#0A3069;--shiki-dark:#CE9178">/Library/Application Support/Claude/claude_desktop_config.json"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6E7781;--shiki-dark:#6A9955"># Alternative method using Visual Studio Code</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">code</span><span style="color:#0A3069;--shiki-dark:#CE9178"> "</span><span style="color:#1F2328;--shiki-dark:#9CDCFE">$HOME</span><span style="color:#0A3069;--shiki-dark:#CE9178">/Library/Application Support/Claude/claude_desktop_config.json"</span></span>
+</code>
+
+Add this configuration (replace tvly-YOUR_API_KEY-here with your Tavily API key):
+
+Configuration
+
+<code language="json" numberOfLines="11"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "mcpServers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "command"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"npx"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "args"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: [</span><span style="color:#0A3069;--shiki-dark:#CE9178">"-y"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">, </span><span style="color:#0A3069;--shiki-dark:#CE9178">"tavily-mcp@0.1.2"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "env"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "TAVILY_API_KEY"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"tvly-YOUR_API_KEY-here"</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+​
+
+Default Parameters
+
+For local MCP setups, you can set default parameter values using the DEFAULT_PARAMETERS environment variable. This allows you to configure default search behavior without specifying these parameters in every request.
+
+<code language="json" numberOfLines="12"><span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">{</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "mcpServers"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "tavily-mcp"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "command"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"npx"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "args"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: [</span><span style="color:#0A3069;--shiki-dark:#CE9178">"-y"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">, </span><span style="color:#0A3069;--shiki-dark:#CE9178">"tavily-mcp@latest"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">],</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "env"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: {</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "TAVILY_API_KEY"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"your-api-key-here"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#116329;--shiki-dark:#9CDCFE"> "DEFAULT_PARAMETERS"</span><span style="color:#1F2328;--shiki-dark:#D4D4D4">: </span><span style="color:#0A3069;--shiki-dark:#CE9178">"{</span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">include_images</span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">: true, </span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">max_results</span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">: 15, </span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">search_depth</span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">: </span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">advanced</span><span style="color:#CF222E;--shiki-dark:#D7BA7D">\"</span><span style="color:#0A3069;--shiki-dark:#CE9178">}"</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4"> }</span></span>
+<span class="line"><span style="color:#1F2328;--shiki-dark:#D4D4D4">}</span></span>
+</code>
+
+​
+
+Usage Examples
+
+Tavily Search Examples
+
+General Web Search:
+
+<code language="text" numberOfLines="2"><span class="line"><span>Can you search for recent developments in quantum computing?</span></span>
+<span class="line"><span></span></span></code>
+
+News Search:
+
+<code language="text" numberOfLines="2"><span class="line"><span>Search for news articles about AI startups from the last 7 days.</span></span>
+<span class="line"><span></span></span></code>
+
+Domain-Specific Search:
+
+<code language="text" numberOfLines="2"><span class="line"><span>Search for climate change research on nature.com and sciencedirect.com</span></span>
+<span class="line"><span></span></span></code>
+
+Tavily Extract Examples
+
+Extract Article Content: Extract the main content from this article: https://example.com/article
+
+Combined Usage
+
+<code language="text" numberOfLines="2"><span class="line"><span>Search for news articles about AI startups from the last 7 days and extract the main content from each article to generate a detailed report.</span></span>
+<span class="line"><span></span></span></code>
+
+​
+
+Troubleshooting
+
+Server Not Found
+
+If you encounter server connection issues, run these commands to verify your environment:
+
+<code language="shellscript" numberOfLines="2"><span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">npm</span><span style="color:#0550AE;--shiki-dark:#569CD6"> --version</span></span>
+<span class="line"><span style="color:#953800;--shiki-dark:#DCDCAA">node</span><span style="color:#0550AE;--shiki-dark:#569CD6"> --version</span></span>
+</code>
+
+Make sure to also check your configuration syntax for any errors.
+
+NPX Issues
+
+If experiencing problems with npx, locate your executable:
+
+<code language="shellscript" numberOfLines="1"><span class="line"><span style="color:#0550AE;--shiki-dark:#DCDCAA">which</span><span style="color:#0A3069;--shiki-dark:#CE9178"> npx</span></span>
+</code>
+
+Once you have the path, update your configuration to use the full path to the npx executable.
+
+API Key Issues
+
+When troubleshooting API key problems, verify that your key is:
+
+Properly formatted with the tvly- prefix
+
+Valid and active in your Tavily dashboard
+
+Correctly configured in your environment variables
+
+You can test your API key validity by making a simple test request through the Tavily Playground
+
+​
+
+Acknowledgments
+
+Model Context Protocol
+
+For the MCP specification
+
+Anthropic
+
+For Claude Desktop
+
+Try Tavily Without an API Key
+
+Next
+
+⌘I
+
+Assistant
+
+Responses are generated using AI and may contain mistakes.

@@ -29,4 +29,5 @@ jobs:
       - name: Fetch trending AI agent repos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SCT_SENDKEY: ${{ secrets.SCT_SENDKEY }}
         run: python scripts/ai_agent_trending.py
