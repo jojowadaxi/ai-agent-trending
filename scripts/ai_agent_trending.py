@@ -123,18 +123,57 @@ def _get_qq_access_token() -> str | None:
         return None
 
 
-def _format_repo_qq(repo: dict, rank: int) -> str:
-    """Format a single repo for QQ markdown message."""
+def _format_repo_qq_detailed(repo: dict, rank: int) -> str:
+    """Format a single repo for QQ markdown — name, stars, lang, description."""
     name = repo["full_name"]
     stars = repo["stargazers_count"]
+    lang = repo.get("language") or "—"
     desc = (repo.get("description") or "").strip()
-    if len(desc) > 50:
-        desc = desc[:47] + "..."
-    return f"{rank}. **{name}** ⭐{stars:,}  \n  {desc}"
+    if len(desc) > 80:
+        desc = desc[:77] + "..."
+    return f"{rank}. **{name}** ⭐{stars:,}  {lang}  \n  {desc}"
 
 
-def send_qq_summary(top_repos: list[dict], issue_url: str) -> bool:
-    """Send weekly summary to QQ via QQ Bot C2C message (主动消息，每月限4条)."""
+def _build_qq_markdown(results: list[tuple[str, list[dict]]], issue_url: str) -> str:
+    """Build a detailed QQ markdown message with all categories."""
+    today = datetime.utcnow().strftime("%m/%d")
+    lines = [f"# 🤖 AI Agent 每周速递 — {today}", ""]
+
+    # ── TOP 5 总榜 ──
+    all_repos = []
+    for _, repos in results:
+        all_repos.extend(repos)
+    seen = set()
+    unique = []
+    for repo in sorted(all_repos, key=lambda r: r["stargazers_count"], reverse=True):
+        if repo["full_name"] not in seen:
+            seen.add(repo["full_name"])
+            unique.append(repo)
+
+    lines.append("## 🔥 TOP 5 总榜")
+    lines.append("")
+    for rank, repo in enumerate(unique[:5], 1):
+        lines.append(_format_repo_qq_detailed(repo, rank))
+    lines.append("")
+
+    # ── 分类详情 ──
+    for label, repos in results:
+        if not repos:
+            continue
+        lines.append(f"## {label}")
+        lines.append("")
+        for rank, repo in enumerate(repos[:5], 1):
+            lines.append(_format_repo_qq_detailed(repo, rank))
+        lines.append("")
+
+    lines.append("---")
+    lines.append(f"👉 [查看完整 Issue]({issue_url})")
+
+    return "\n".join(lines)
+
+
+def send_qq_summary(results: list[tuple[str, list[dict]]], issue_url: str) -> bool:
+    """Send detailed weekly summary to QQ via QQ Bot C2C (主动消息，每月限4条)."""
     if not QQ_OPENID:
         print("⚠️ QQ_OPENID not configured, skipping QQ notification.")
         return False
@@ -143,14 +182,7 @@ def send_qq_summary(top_repos: list[dict], issue_url: str) -> bool:
     if not token:
         return False
 
-    today = datetime.utcnow().strftime("%m/%d")
-    lines = [f"## 🤖 AI Agent 每周速递 — {today}", ""]
-    for i, repo in enumerate(top_repos[:10], 1):
-        lines.append(_format_repo_qq(repo, i))
-    lines.append("")
-    lines.append(f"👉 [查看详情]({issue_url})")
-
-    markdown_content = "\n".join(lines)
+    markdown_content = _build_qq_markdown(results, issue_url)
 
     try:
         r = requests.post(
@@ -272,7 +304,7 @@ def main():
             seen.add(repo["full_name"])
             unique.append(repo)
     send_wechat_summary(unique, issue_url_html)
-    send_qq_summary(unique, issue_url_html)
+    send_qq_summary(results, issue_url_html)
 
 
 if __name__ == "__main__":
