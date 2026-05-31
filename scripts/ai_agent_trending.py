@@ -123,47 +123,152 @@ def _get_qq_access_token() -> str | None:
         return None
 
 
-def _format_repo_qq_detailed(repo: dict, rank: int) -> str:
-    """Format a single repo for QQ markdown — name, stars, lang, description."""
+# ── 中文标签映射 ──────────────────────────────────────────
+
+# (关键词列表, 中文标签, emoji)
+_TAG_RULES: list[tuple[list[str], str]] = [
+    (["agent framework", "multi-agent", "agent orchestration", "agent team",
+      "agent harness", "agent swarm", "agentic framework"], "Agent框架"),
+    (["mcp server", "mcp client", "mcp ", "model context protocol"], "MCP工具"),
+    (["knowledge graph", "code graph", "codegraph", "understand-anything",
+      "knowledge base", "codebase graph"], "知识图谱"),
+    (["security", "cybersecurity", "vulnerability", "pentest",
+      "owasp", "attack", "defend"], "安全"),
+    (["plugin", "skill", "extension", "harness", "addon"], "插件/技能"),
+    (["video", "短视频", "video generation", "short video"], "视频生成"),
+    (["markdown", "markitdown", "document convert", "office",
+      "pdf", "docx", "converter"], "文档工具"),
+    (["voice", "speech", "audio", "tts", "stt", "voice ai"], "语音AI"),
+    (["governance", "compliance", "policy", "zero-trust"], "治理"),
+    (["tutorial", "from scratch", "engineering", "learn it",
+      "build it", "ship it"], "教程"),
+    (["terminal", "cli ", "command line", "terminal agent"], "终端工具"),
+    (["censorship", "uncensored", "uncensor", "heretic"], "审查移除"),
+    (["cursor", "claude code", "codex", "copilot", "gemini cli",
+      "coding agent", "code agent", "ai coding"], "编码助手"),
+    (["taste", "slop", "writing style", "prose"], "文本优化"),
+    (["memory", "context", "long-term", "persistent"], "记忆/上下文"),
+]
+
+
+def _tag_repo(repo: dict) -> str:
+    """Assign a Chinese tag to a repo based on description + name keywords."""
+    text = ((repo.get("description") or "") + " " + repo["full_name"]).lower()
+    for keywords, tag in _TAG_RULES:
+        for kw in keywords:
+            if kw in text:
+                return tag
+    return "其他"
+
+
+def _score_repo(repo: dict) -> float:
+    """Score a repo for curation (0-100). Stars + recency + relevance."""
+    stars = repo.get("stargazers_count", 0) or 0
+    # diminishing returns: 100 stars → 25, 10000 stars → 63
+    score = min(80, stars ** 0.35 * 5)
+
+    # recency bonus (pushed in last 30 days)
+    pushed = repo.get("pushed_at", "")
+    if pushed:
+        try:
+            pushed_dt = datetime.fromisoformat(pushed.replace("Z", "+00:00"))
+            days_ago = (datetime.utcnow().replace(tzinfo=pushed_dt.tzinfo) - pushed_dt).days
+            if days_ago <= 7:
+                score += 15
+            elif days_ago <= 30:
+                score += 8
+        except ValueError:
+            pass
+
+    # created this week bonus
+    created = repo.get("created_at", "")
+    if created:
+        try:
+            created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            days_ago = (datetime.utcnow().replace(tzinfo=created_dt.tzinfo) - created_dt).days
+            if days_ago <= 7:
+                score += 20
+            elif days_ago <= 14:
+                score += 10
+        except ValueError:
+            pass
+
+    # agent relevance bonus
+    text = ((repo.get("description") or "") + " " + repo["full_name"]).lower()
+    agent_keywords = ["agent", "agentic", "mcp", "llm", "ai "]
+    hits = sum(1 for kw in agent_keywords if kw in text)
+    score += hits * 3
+
+    return min(100, score)
+
+
+def _format_curated_repo(repo: dict, rank: int) -> str:
+    """Format one curated repo with Chinese tag and score signal."""
     name = repo["full_name"]
-    stars = repo["stargazers_count"]
-    lang = repo.get("language") or "—"
+    stars = repo.get("stargazers_count", 0) or 0
+    score = _score_repo(repo)
+    tag = _tag_repo(repo)
+
+    # visual signal
+    signal = "🔥" if score >= 70 else ("⚡" if score >= 50 else "📌")
+
+    # description — trim and use as-is (English is OK, tag is Chinese)
     desc = (repo.get("description") or "").strip()
-    if len(desc) > 80:
-        desc = desc[:77] + "..."
-    return f"{rank}. **{name}** ⭐{stars:,}  {lang}  \n  {desc}"
+    if len(desc) > 70:
+        desc = desc[:67] + "..."
+
+    return (f"{rank}. {signal} **{name}**  [{tag}]  ⭐{stars:,}\n"
+            f"  {desc}")
 
 
 def _build_qq_markdown(results: list[tuple[str, list[dict]]], issue_url: str) -> str:
-    """Build a detailed QQ markdown message with all categories."""
+    """Build curated QQ markdown: scored, tagged, only top picks."""
     today = datetime.utcnow().strftime("%m/%d")
     lines = [f"# 🤖 AI Agent 每周速递 — {today}", ""]
 
-    # ── TOP 5 总榜 ──
-    all_repos = []
-    for _, repos in results:
-        all_repos.extend(repos)
+    # ── 收集 + 去重 + 评分 ──
+    all_repos: list[dict] = []
     seen = set()
-    unique = []
-    for repo in sorted(all_repos, key=lambda r: r["stargazers_count"], reverse=True):
-        if repo["full_name"] not in seen:
-            seen.add(repo["full_name"])
-            unique.append(repo)
+    for _, repos in results:
+        for repo in repos:
+            if repo["full_name"] not in seen:
+                seen.add(repo["full_name"])
+                all_repos.append(repo)
 
-    lines.append("## 🔥 TOP 5 总榜")
+    scored = sorted(all_repos, key=lambda r: _score_repo(r), reverse=True)
+
+    # ── 精选推荐 (top 8) ──
+    lines.append("## 🏆 精选推荐")
     lines.append("")
-    for rank, repo in enumerate(unique[:5], 1):
-        lines.append(_format_repo_qq_detailed(repo, rank))
+    for rank, repo in enumerate(scored[:8], 1):
+        lines.append(_format_curated_repo(repo, rank))
     lines.append("")
 
-    # ── 分类详情 ──
-    for label, repos in results:
-        if not repos:
-            continue
-        lines.append(f"## {label}")
+    # ── 值得关注 (next 6) ──
+    if len(scored) > 8:
+        lines.append("## 👀 值得关注")
         lines.append("")
-        for rank, repo in enumerate(repos[:5], 1):
-            lines.append(_format_repo_qq_detailed(repo, rank))
+        for rank, repo in enumerate(scored[8:14], 1):
+            lines.append(_format_curated_repo(repo, rank))
+        lines.append("")
+
+    # ── 本周新项目 ──
+    week_ago = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d")
+    new_this_week = [
+        r for r in all_repos
+        if (r.get("created_at") or "")[:10] >= week_ago
+    ]
+    if new_this_week:
+        new_sorted = sorted(new_this_week, key=lambda r: r.get("stargazers_count", 0) or 0, reverse=True)
+        lines.append("## 🆕 本周新项目")
+        lines.append("")
+        for rank, repo in enumerate(new_sorted[:5], 1):
+            name = repo["full_name"]
+            stars = repo.get("stargazers_count", 0) or 0
+            desc = (repo.get("description") or "").strip()
+            if len(desc) > 60:
+                desc = desc[:57] + "..."
+            lines.append(f"{rank}. **{name}** ⭐{stars:,}\n  {desc}")
         lines.append("")
 
     lines.append("---")
