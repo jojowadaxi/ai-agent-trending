@@ -1,0 +1,30 @@
+name: Weekly AI Agent Trending
+
+on:
+  schedule:
+    # 每周一早上 9:00 (北京时间 UTC+8 → UTC 01:00)
+    - cron: "0 1 * * 1"
+  # 也允许手动触发
+  workflow_dispatch:
+
+jobs:
+  fetch-trending:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch trending AI agent repos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/ai_agent_trending.py
