@@ -30,4 +30,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SCT_SENDKEY: ${{ secrets.SCT_SENDKEY }}
+          QQ_APPID: ${{ secrets.QQ_APPID }}
+          QQ_SECRET: ${{ secrets.QQ_SECRET }}
+          QQ_OPENID: ${{ secrets.QQ_OPENID }}
         run: python scripts/ai_agent_trending.py

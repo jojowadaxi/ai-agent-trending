@@ -1,6 +1,6 @@
 """
 Weekly AI Agent Trending — fetch trending AI agent repos from GitHub,
-create an Issue, and push summary via Server酱 (WeChat).
+create an Issue, and push summary via Server酱 (WeChat) + QQ Bot.
 """
 
 import os
@@ -13,6 +13,13 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "owner/repo")
 
 # Server酱 SendKey（从 GitHub Secrets 读取）
 SCT_SENDKEY = os.environ.get("SCT_SENDKEY", "")
+
+# QQ Bot 配置（从 GitHub Secrets 读取）
+QQ_APPID = os.environ.get("QQ_APPID", "")
+QQ_SECRET = os.environ.get("QQ_SECRET", "")
+QQ_OPENID = os.environ.get("QQ_OPENID", "")  # 接收消息的 QQ 用户 openid
+
+QQ_API = "https://api.sgroup.qq.com"
 
 GH_HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -91,6 +98,81 @@ def send_wechat_summary(top_repos: list[dict], issue_url: str) -> bool:
             return False
     except Exception as e:
         print(f"❌ Server酱 error: {e}")
+        return False
+
+
+# ── QQ Bot 推送 ────────────────────────────────────────────
+
+def _get_qq_access_token() -> str | None:
+    """获取 QQ Bot access_token，失败返回 None。"""
+    if not QQ_APPID or not QQ_SECRET:
+        print("⚠️ QQ_APPID / QQ_SECRET not configured, skipping QQ notification.")
+        return None
+    try:
+        r = requests.post(
+            "https://bots.qq.com/app/getAppAccessToken",
+            json={"appId": QQ_APPID, "clientSecret": QQ_SECRET},
+            timeout=15,
+        )
+        r.raise_for_status()
+        token = r.json()["access_token"]
+        print(f"✅ QQ access_token obtained: {token[:10]}...")
+        return token
+    except Exception as e:
+        print(f"❌ Failed to get QQ access_token: {e}")
+        return None
+
+
+def _format_repo_qq(repo: dict, rank: int) -> str:
+    """Format a single repo for QQ markdown message."""
+    name = repo["full_name"]
+    stars = repo["stargazers_count"]
+    desc = (repo.get("description") or "").strip()
+    if len(desc) > 50:
+        desc = desc[:47] + "..."
+    return f"{rank}. **{name}** ⭐{stars:,}  \n  {desc}"
+
+
+def send_qq_summary(top_repos: list[dict], issue_url: str) -> bool:
+    """Send weekly summary to QQ via QQ Bot C2C message (主动消息，每月限4条)."""
+    if not QQ_OPENID:
+        print("⚠️ QQ_OPENID not configured, skipping QQ notification.")
+        return False
+
+    token = _get_qq_access_token()
+    if not token:
+        return False
+
+    today = datetime.utcnow().strftime("%m/%d")
+    lines = [f"## 🤖 AI Agent 每周速递 — {today}", ""]
+    for i, repo in enumerate(top_repos[:10], 1):
+        lines.append(_format_repo_qq(repo, i))
+    lines.append("")
+    lines.append(f"👉 [查看详情]({issue_url})")
+
+    markdown_content = "\n".join(lines)
+
+    try:
+        r = requests.post(
+            f"{QQ_API}/v2/users/{QQ_OPENID}/messages",
+            json={
+                "msg_type": 2,  # markdown
+                "markdown": {"content": markdown_content},
+            },
+            headers={
+                "Authorization": f"QQBot {token}",
+                "Content-Type": "application/json",
+            },
+            timeout=15,
+        )
+        if r.status_code == 200:
+            print("✅ QQ message sent!")
+            return True
+        else:
+            print(f"❌ QQ send failed ({r.status_code}): {r.text[:300]}")
+            return False
+    except Exception as e:
+        print(f"❌ QQ error: {e}")
         return False
 
 
@@ -190,9 +272,7 @@ def main():
             seen.add(repo["full_name"])
             unique.append(repo)
     send_wechat_summary(unique, issue_url_html)
-    # Cleanup: remove old QQ secrets if present
-    if os.environ.get("QQ_APPID"):
-        print("ℹ️ QQ credentials present but no longer used — can be removed from Secrets.")
+    send_qq_summary(unique, issue_url_html)
 
 
 if __name__ == "__main__":
